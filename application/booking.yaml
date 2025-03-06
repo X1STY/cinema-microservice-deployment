@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: booking
-  namespace: cinema
 spec:
   replicas: 1
   selector:
@@ -51,7 +50,6 @@ metadata:
   labels:
     app: booking
   name: booking
-  namespace: cinema
 spec:
   ports:
     - name: booking
