@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env-payment
+  namespace: cinema
+data:
+  PORT: '3000'
+  DB: payment
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: certs-payment
+  namespace: cinema
+data:
+  server.crt: |-
+    -----BEGIN CERTIFICATE-----
+    
+    -----END CERTIFICATE-----
+  server.key: |-
+    -----BEGIN PRIVATE KEY-----
+    
+    -----END PRIVATE KEY-----

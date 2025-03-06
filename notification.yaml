@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification
+  namespace: cinema
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification
+  template:
+    metadata:
+      labels:
+        app: notification
+    spec:
+      initContainers:
+      - name: wait-for-mongodb
+        image: appropriate/curl
+        command: ['sh', '-c', 'until nc -z mongodb 27017; do echo waiting for mongodb; sleep 2; done;']
+      containers:
+        - image: x1sty/notification:latest
+          name: notification
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: env-database
+            - configMapRef:
+                name: env-notification
+          volumeMounts:
+            - name: certificates
+              mountPath: /home/nupp/app/src/config/ssl/server.crt
+              subPath: server.crt
+            - name: certificates
+              mountPath: /home/nupp/app/src/config/ssl/server.key
+              subPath: server.key
+      volumes:
+        - name: certificates
+          configMap:
+            name: certs-notification
+            items:
+            - key: server.crt
+              path: server.crt
+            - key: server.key
+              path: server.key
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification
+  namespace: cinema
+spec:
+  ports:
+    - name: notification
+      port: 3000
+      targetPort: 3000
+  selector:
+    app: notification

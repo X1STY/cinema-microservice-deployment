@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: movies
+  namespace: cinema
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: movies
+  template:
+    metadata:
+      labels:
+        app: movies
+    spec:
+      initContainers:
+      - name: wait-for-mongodb
+        image: appropriate/curl
+        command: ['sh', '-c', 'until nc -z mongodb 27017; do echo waiting for mongodb; sleep 2; done;']
+      containers:
+        - image: x1sty/movies:latest
+          name: movies
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: env-database
+            - configMapRef:
+                name: env-movies
+          volumeMounts:
+            - name: certificates
+              mountPath: /home/nupp/app/src/config/ssl/server.crt
+              subPath: server.crt
+            - name: certificates
+              mountPath: /home/nupp/app/src/config/ssl/server.key
+              subPath: server.key
+      volumes:
+        - name: certificates
+          configMap:
+            name: certs-movies
+            items:
+            - key: server.crt
+              path: server.crt
+            - key: server.key
+              path: server.key
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: movies
+  namespace: cinema
+spec:
+  ports:
+    - name: movies
+      port: 3000
+      targetPort: 3000
+  selector:
+    app: movies

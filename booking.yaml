@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booking
+  namespace: cinema
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booking
+  template:
+    metadata:
+      labels:
+        app: booking
+    spec:
+      initContainers:
+      - name: wait-for-mongodb
+        image: appropriate/curl
+        command: ['sh', '-c', 'until nc -z mongodb 27017; do echo waiting for mongodb; sleep 2; done;']
+      containers:
+        - image: x1sty/booking:latest
+          name: booking
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: env-database
+            - configMapRef:
+                name: env-booking
+          volumeMounts:
+            - name: certificates
+              mountPath: /home/nupp/app/src/config/ssl/server.crt
+              subPath: server.crt
+            - name: certificates
+              mountPath: /home/nupp/app/src/config/ssl/server.key
+              subPath: server.key
+      volumes:
+        - name: certificates
+          configMap:
+            name: certs-booking
+            items:
+            - key: server.crt
+              path: server.crt
+            - key: server.key
+              path: server.key
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: booking
+  name: booking
+  namespace: cinema
+spec:
+  ports:
+    - name: booking
+      port: 3000
+      targetPort: 3000
+  selector:
+    app: booking

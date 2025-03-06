@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env-movies
+  namespace: cinema
+data:
+  PORT: '3000'
+  DB: movies
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: certs-movies
+  namespace: cinema
+data:
+  server.crt: |-
+    -----BEGIN CERTIFICATE-----
+    
+    -----END CERTIFICATE-----
+  server.key: |-
+    -----BEGIN PRIVATE KEY-----
+    
+    -----END PRIVATE KEY-----

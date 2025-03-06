@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cinema-catalog
+  namespace: cinema
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cinema-catalog
+  template:
+    metadata:
+      labels:
+        app: cinema-catalog
+    spec:
+      initContainers:
+      - name: wait-for-mongodb
+        image: appropriate/curl
+        command: ['sh', '-c', 'until nc -z mongodb 27017; do echo waiting for mongodb; sleep 2; done;']
+      containers:
+        - image: x1sty/cinema-catalog:latest
+          name: cinema-catalog
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: env-database
+            - configMapRef:
+                name: env-cinema-catalog
+          volumeMounts:
+            - name: certificates
+              mountPath: /home/nupp/app/src/config/ssl/server.crt
+              subPath: server.crt
+            - name: certificates
+              mountPath: /home/nupp/app/src/config/ssl/server.key
+              subPath: server.key
+      volumes:
+        - name: certificates
+          configMap:
+            name: certs-cinema-catalog
+            items:
+            - key: server.crt
+              path: server.crt
+            - key: server.key
+              path: server.key
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cinema-catalog
+  namespace: cinema
+spec:
+  ports:
+    - name: cinema-catalog
+      port: 3000
+      targetPort: 3000
+  selector:
+    app: cinema-catalog

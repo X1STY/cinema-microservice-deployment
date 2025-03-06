@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env-database
+  namespace: cinema
+data:
+  DB_USER: asdasdsaxcvx2314
+  DB_PASS: g4t3esdfsdf23ASDerw
+  DB_REPLS: rs1
+  DB_SERVERS: >-
+    'mongodb:27017'
